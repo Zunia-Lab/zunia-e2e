@@ -1,0 +1,5 @@
+# Maestro scaffold — unlock / send flows land with mobile MVP
+appId: com.zuniawallet.zunia_mobile
+---
+- launchApp
+- assertVisible: "Zunia"

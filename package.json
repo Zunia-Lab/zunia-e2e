@@ -1,0 +1,16 @@
+{
+  "name": "@zunialab/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zunia end-to-end test harness (Playwright + Maestro configs)",
+  "scripts": {
+    "test:web": "playwright test",
+    "test:web:ui": "playwright test --ui",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "Apache-2.0"
+}
