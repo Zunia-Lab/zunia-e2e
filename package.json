@@ -2,6 +2,7 @@
   "name": "@zunialab/e2e",
   "version": "0.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "Zunia end-to-end test harness (Playwright + Maestro configs)",
   "scripts": {
     "test:web": "playwright test",
