@@ -1,0 +1,9 @@
+# Maestro — dApp connect sheet / sessions surface
+appId: com.zuniawallet.zunia_mobile
+---
+- launchApp
+- assertVisible: "Zunia"
+# Settings → Connected apps is available after unlock; scaffold only until CI secrets land
+- extendedWaitUntil:
+    visible: "Zunia"
+    timeout: 15000

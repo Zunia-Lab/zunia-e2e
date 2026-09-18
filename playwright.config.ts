@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Extension E2E needs a packed MV3 build + persistent context.
- * Config scaffold only — tests are skipped until wallet MVP exists.
+ * Config scaffold — dashboard smoke is active when E2E_BASE_URL is reachable.
+ * Maestro mobile flows are separate under maestro/.
  */
 export default defineConfig({
   testDir: "./playwright",
