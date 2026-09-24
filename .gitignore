@@ -1,5 +1,6 @@
 node_modules
 test-results
 playwright-report
+playwright-report-stack
 .env
 .DS_Store

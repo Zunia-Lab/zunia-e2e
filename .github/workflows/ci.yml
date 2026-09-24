@@ -13,9 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # pnpm comes from packageManager in package.json.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -23,16 +22,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
 
-  # Dashboard smoke (playwright/scaffold.spec.ts) is unskipped.
-  # Set repo variable E2E_BASE_URL to a live dashboard preview, or the test
-  # self-skips when nothing is listening (harness still runs). Maestro unchanged.
+  # Dashboard smoke (playwright/). Set the repo variable E2E_BASE_URL to a live
+  # dashboard preview; the tests skip themselves when nothing answers there.
   playwright:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -48,3 +44,39 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # The SDK's QR transport against the real relay, from the main branches of
+  # zunia-sdk and zunia-backend checked out next to this repo. The extension
+  # specs in stack/ need the kernel built from zunia-core, so they run locally.
+  relay-interop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: zunia-e2e
+      - uses: actions/checkout@v4
+        with:
+          repository: Zunia-Lab/zunia-sdk
+          path: zunia-sdk
+      - uses: actions/checkout@v4
+        with:
+          repository: Zunia-Lab/zunia-backend
+          path: zunia-backend
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: zunia-e2e/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the SDK
+        working-directory: zunia-sdk
+        run: pnpm install --frozen-lockfile && pnpm build
+      - name: Install the relay
+        working-directory: zunia-backend
+        run: pnpm install --frozen-lockfile
+      - name: Relay interop
+        working-directory: zunia-e2e
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck:stack
+          pnpm test:stack stack/relay.spec.ts

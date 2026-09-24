@@ -1,9 +1,71 @@
-# Maestro — dApp connect sheet / sessions surface
-appId: com.zuniawallet.zunia_mobile
+# Zunia Connect v2 on the phone: restore a test wallet, pair with a site
+# through the relay, check what the approval sheet shows, connect, sign in.
+#
+# Run it through scripts/mobile-connect.mjs, which starts the relay and the
+# site and passes APP_ID, PAIRING_URI and STATE_URL. Needs a debug build of
+# zunia-mobile: only debug builds trust a relay on this machine.
+appId: ${APP_ID}
+env:
+  PHRASE: enlist hip relief stomach skate base shallow young switch frequent cry park
+  PASSWORD: zunia-e2e-password
 ---
-- launchApp
-- assertVisible: "Zunia"
-# Settings → Connected apps is available after unlock; scaffold only until CI secrets land
+- launchApp:
+    clearState: true
+    clearKeychain: true
+# System prompts a simulator may show on top of the app, such as an Apple
+# account check that comes back after the first dismissal.
+- repeat:
+    times: 5
+    while:
+      visible: Not Now
+    commands:
+      - tapOn: Not Now
+- tapOn:
+    text: Allow
+    optional: true
 - extendedWaitUntil:
-    visible: "Zunia"
-    timeout: 15000
+    visible: I will never share my recovery phrase.*
+    timeout: 30000
+- tapOn: I will never share my recovery phrase.*
+- tapOn: I accept that Zunia cannot recover.*
+- tapOn: I have a recovery phrase
+- tapOn: 12-word recovery phrase
+- inputText: ${PHRASE}
+# The footer sits above the keyboard, and hideKeyboard cannot close a
+# multi-line field on iOS.
+- tapOn: Continue
+# The wallet name comes filled in. Field labels sit above the inputs, so tap
+# the hints inside them.
+- tapOn: At least 8 characters
+- inputText: ${PASSWORD}
+- tapOn: Repeat password
+- inputText: ${PASSWORD}
+- tapOn: Continue
+- tapOn: Restore wallet
+- extendedWaitUntil:
+    visible: Home
+    timeout: 60000
+
+# The site created the session; open its pairing link as a scan would.
+- openLink: ${PAIRING_URI}
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible: VERIFIED ORIGIN
+    timeout: 30000
+- runScript:
+    file: scripts/site-state.js
+    env:
+      STATE_URL: ${STATE_URL}
+# Same code on both screens, and the host the relay saw.
+- assertVisible: ${output.code}
+- assertVisible: ${output.host}
+- tapOn: Connect
+- extendedWaitUntil:
+    visible: Sign in to ${output.host}
+    timeout: 30000
+- tapOn: Sign in
+- extendedWaitUntil:
+    notVisible: Sign in to ${output.host}
+    timeout: 30000

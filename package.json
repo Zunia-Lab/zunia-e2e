@@ -7,11 +7,17 @@
   "scripts": {
     "test:web": "playwright test",
     "test:web:ui": "playwright test --ui",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "test:stack": "playwright test -c playwright.stack.config.ts",
+    "test:mobile:connect": "node scripts/mobile-connect.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:stack": "tsc -p tsconfig.stack.json --noEmit"
   },
   "devDependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "@playwright/test": "^1.50.0",
     "@types/node": "^22",
+    "puppeteer-core": "^25.12.0",
     "typescript": "^5.7.0"
   },
   "license": "Apache-2.0"
