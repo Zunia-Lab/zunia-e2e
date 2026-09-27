@@ -39,7 +39,7 @@ test.beforeAll(async () => {
     // WebDriver BiDi only opens moz-extension:// pages with system access.
     args: ["--remote-allow-system-access"],
     extraPrefsFirefox: {
-      "extensions.webextensions.uuids": JSON.stringify({ "extension@zunialab.com": UUID }),
+      "extensions.webextensions.uuids": JSON.stringify({ "wallet@zunialab.com": UUID }),
       "extensions.background.idle.timeout": BACKGROUND_IDLE_MS,
     },
   });
