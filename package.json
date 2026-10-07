@@ -7,6 +7,7 @@
   "scripts": {
     "test:web": "playwright test",
     "test:web:ui": "playwright test --ui",
+    "test:dashboard": "playwright test --project=chromium",
     "test:stack": "playwright test -c playwright.stack.config.ts",
     "test:mobile:connect": "node scripts/mobile-connect.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

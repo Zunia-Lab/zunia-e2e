@@ -10,7 +10,7 @@ is now rather than a release.
 stack/        Playwright: the extension and the SDK against the relay
 maestro/      Maestro: the phone wallet pairing with a site
 scripts/      Drivers that start what a suite needs, then run it
-playwright/   Playwright: dashboard smoke test
+playwright/   Playwright: the dashboard (app.zunialab.com) against a running deployment
 ```
 
 ## Before you start
@@ -108,16 +108,46 @@ on macOS and iOS before a store submission. The same checklist covers what the s
 reach in Chrome and Firefox either, such as Direct signing, lock and unlock, and revoking a
 single chain.
 
-## Dashboard smoke (playwright/)
+## Dashboard (playwright/)
 
-`pnpm test:web` opens the dashboard at `E2E_BASE_URL` (default `http://127.0.0.1:3000`) and
-checks its title and heading. The test skips itself when nothing answers there.
+```bash
+E2E_BASE_URL=http://127.0.0.1:3000 pnpm test:dashboard   # zunia-dashboard's `pnpm dev`, a preview or production
+```
+
+The suite reads live chain data through the dashboard's API and asserts shapes, never values.
+Every test skips itself when nothing answers at `E2E_BASE_URL` (default
+`http://127.0.0.1:3000`); `E2E_REQUIRE_DASHBOARD=1` makes that a failure. `E2E_WORKERS` sets
+the parallelism (4 by default, 2 in CI).
+
+- `smoke.spec.ts`: every public page answers 200 with its title, one h1, no console error and
+  no sideways scroll at 390 px, detail pages included (a validator, a proposal, an asset and a
+  transaction read from the API first); wallet pages show the connect panel without a wallet;
+  unknown URLs are 404s.
+- `wallet.spec.ts`: with a wallet. Overview's net worth, scope switching (rail, popover, the
+  `0` shortcut), privacy mode, the command palette (Meta+K), the notifications popover, theme
+  and currency, Disconnect, connecting Keplr from a page's connect panel, and every wallet page
+  at 390 px with its data on screen.
+- `headers.spec.ts`: anti-framing and the other security headers, `private, no-store` on
+  address-keyed API calls, the service worker's cache rules, robots meta and canonical URLs,
+  robots.txt, and a sitemap whose every entry answers 200 and is indexable.
+- `api.spec.ts`: `/api/health`, `/api/markets`, `/api/chains/stats` and `/api/portfolio`
+  answer in the shape the pages read, and refuse bad input with a 400.
+- `regressions.spec.ts`: the decisions of the v2 audit. The Staking Network select is clickable
+  and leads to the validator picker, `/mobile` is a 308 to the Connect wallet modal's Zunia
+  Mobile view, the modal offers Zunia Mobile (no page, no nav entry, no "pair" button),
+  `/notifications` only lists (preferences live in Settings), and Activity shows at most ten
+  rows before "Load more".
+
+The wallet is a read-only stand-in for Keplr (`support/mock-wallet.ts`), injected before the
+page loads: it shares public addresses of real accounts and every signing call throws, so no
+test can sign or broadcast. Zunia Mobile's QR view is kept from opening a real pairing session
+on the relay.
 
 ## CI
 
 - **typecheck:** `pnpm typecheck`.
-- **playwright:** the dashboard smoke test. Set the repository variable `E2E_BASE_URL` to a
-  live dashboard preview.
+- **playwright:** the dashboard suite. Set the repository variable `E2E_BASE_URL` to a live
+  dashboard preview or production.
 - **relay-interop:** `stack/relay.spec.ts` against the main branches of zunia-sdk and
   zunia-backend. The extension specs need the kernel built from zunia-core, so they run
   locally.
