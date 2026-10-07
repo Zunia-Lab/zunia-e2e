@@ -238,13 +238,22 @@ E2E_SIGNING=1 E2E_BASE_URL=http://127.0.0.1:3000 EXT_DIR=…/chrome-mv3 EXT_DIR_
   the spec, `POST /api/broadcast` is captured and answered without ever reaching the server, and
   any other POST that looks like a broadcast is aborted. Balances, positions, activity and
   proposals are a real public account's (`RETAIL_WALLET`), read as if the test key held them.
+  The NFTs the flows move belong to a collection nobody controls, whose token reads the spec
+  answers, and the recovery follows a swap whose tracking the spec answers as "delivery failed".
 - Flows: a send with memo "a & b <c>", a send to a 32-byte address, an IBC transfer, claim,
   stake more, move stake, unstake, a vote on a live Hub proposal, a swap from the Hub (a
-  transfer that runs Osmosis's swap contract) and a contract swap from Osmosis. Keplr signs
-  standard messages in amino and the rest in direct, Zunia 0.1.5 signs everything in direct,
-  Zunia 0.1.4 keeps the legacy policy. A wallet that returns a signature over other bytes must
-  be stopped before anything is broadcast. These are the expectations of a dashboard that reads
-  the extension's capabilities and checks each signature before broadcasting (after a8cab18).
+  transfer that runs Osmosis's swap contract), a contract swap from Osmosis, a swap in an
+  Osmosis pool, the recovery of a swap whose delivery failed, and two NFT transfers, one whose
+  token id holds "&". Keplr signs standard messages in amino and the rest in direct, Zunia 0.1.5
+  signs everything in direct, Zunia 0.1.4 keeps the legacy policy on the sends, the contract
+  swap and the NFT transfers (the one with "&" stops before anything is broadcast). A wallet
+  that returns a signature over other bytes must be stopped before anything is broadcast. These
+  are the expectations of a dashboard that reads the extension's capabilities and checks each
+  signature before broadcasting (after a8cab18).
+- Every broadcast must carry the test key, the memo as typed and the contract body the flow
+  meant. On Zunia 0.1.5 every prompt must be decoded: no unknown message, and the sentence of
+  contract F1 ("Give away NFT … from collection … to …", `Execute "recover" on …`, the packet
+  memo notice on a swap from the Hub).
 
 ## CI
 
