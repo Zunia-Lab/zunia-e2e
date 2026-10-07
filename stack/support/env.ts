@@ -1,7 +1,8 @@
 import { resolve } from "node:path";
+import { ADDED_MNEMONIC, MNEMONIC } from "../../signing/phrases";
 
-/** The repos under test sit next to this one, as in the Zunia-Lab workspace. */
-export const WORKSPACE = resolve(__dirname, "../../..");
+/** The repos under test sit next to this one, as in the Zunia-Lab workspace (WORKSPACE overrides). */
+export const WORKSPACE = resolve(process.env.WORKSPACE ?? resolve(__dirname, "../../.."));
 
 export const DAPP_PORT = Number(process.env.DAPP_PORT ?? 5175);
 export const RELAY_PORT = Number(process.env.RELAY_PORT ?? 8790);
@@ -17,6 +18,8 @@ export const FIREFOX_BIN = process.env.FIREFOX_BIN ?? "/Applications/Firefox.app
 /** Serves the pages with hostile CSPs, see csp-pages.ts. */
 export const CSP_PORT = Number(process.env.CSP_PORT ?? 5176);
 
-/** The CosmJS test mnemonic. Public, so never fund it with anything of value. */
-export const TEST_PHRASE = "enlist hip relief stomach skate base shallow young switch frequent cry park";
+/** The public BIP39 test phrase ("abandon … about"). Never fund it with anything of value. */
+export const TEST_PHRASE = MNEMONIC;
+/** The phrase of the account a spec adds with "Add account → Restore with phrase" ("legal winner … yellow"). */
+export const ADDED_PHRASE = ADDED_MNEMONIC;
 export const TEST_PASSWORD = "zunia-e2e-password";

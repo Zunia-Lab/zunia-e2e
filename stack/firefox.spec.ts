@@ -1,11 +1,17 @@
 import { existsSync } from "node:fs";
-import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { sha256 } from "@noble/hashes/sha2.js";
 import { expect, test } from "@playwright/test";
 import puppeteer, { type Browser, type ElementHandle, type Page } from "puppeteer-core";
+import { loadReference, type TestKey } from "../signing/cases";
 import { CSP_PAGES, probeProvider, startCspPages } from "./support/csp-pages";
-import { CSP_PORT, DAPP_URL, FIREFOX_BIN, FIREFOX_EXTENSION_DIR, TEST_PASSWORD, TEST_PHRASE } from "./support/env";
-import { base64ToBytes, serializeAminoSignDoc } from "./support/sdk";
+import { ADDED_PHRASE, CSP_PORT, DAPP_URL, FIREFOX_BIN, FIREFOX_EXTENSION_DIR, TEST_PASSWORD, TEST_PHRASE } from "./support/env";
+import {
+  ESCAPED_MEMO,
+  aminoSignatureVerifies,
+  expectProviderIdentity,
+  manifestVersion,
+  readIdentity,
+  type StdSignature,
+} from "./support/signing";
 
 /**
  * The Firefox build through the same story as extension.spec.ts. Playwright's
@@ -30,8 +36,13 @@ const BACKGROUND_IDLE_MS = 5_000;
 let browser: Browser;
 let dapp: Page;
 let firstAddress: string;
+let firstKey: TestKey;
+let addedKey: TestKey;
 
 test.beforeAll(async () => {
+  const reference = await loadReference();
+  firstKey = reference.keys.main.osmo;
+  addedKey = reference.keys.added.osmo;
   browser = await puppeteer.launch({
     browser: "firefox",
     executablePath: FIREFOX_BIN,
@@ -192,7 +203,7 @@ test("restores the test wallet", async () => {
   await click(page, "button", /^Restore with phrase$/);
   await fill(page, /^word1 word2/, TEST_PHRASE);
   await click(page, "button", /^Continue$/);
-  await fill(page, /^Wallet name/, "E2E");
+  await fill(page, /^Account name/, "E2E");
   await fill(page, /^Password/, TEST_PASSWORD);
   await fill(page, /^Confirm password/, TEST_PASSWORD);
   await click(page, "button", /^Continue$/);
@@ -223,12 +234,16 @@ test("connects from the example dApp, approved in the toolbar popup", async () =
   dapp = await browser.newPage();
   await dapp.goto(DAPP_URL);
   await click(dapp, "[data-testid=connect-extension]", /./);
-  await approveInWallet(new RegExp(new URL(DAPP_URL).host), /^Approve$/);
+  await approveInWallet(new RegExp(new URL(DAPP_URL).host), /^(Connect|Approve)$/);
 
   await expect.poll(() => testId(dapp, "status"), { timeout: 20_000 }).toBe("connected");
   expect(await testId(dapp, "transport")).toBe("extension");
   firstAddress = await testId(dapp, "address");
-  expect(firstAddress).toMatch(/^osmo1[02-9ac-hj-np-z]{38}$/);
+  expect(firstAddress).toBe(firstKey.address);
+});
+
+test("tells sites which build it is and what it signs", async () => {
+  expectProviderIdentity(await dapp.evaluate(readIdentity), manifestVersion(FIREFOX_EXTENSION_DIR));
 });
 
 test("signs in, and the example's server verifies it", async () => {
@@ -237,7 +252,7 @@ test("signs in, and the example's server verifies it", async () => {
   await expect.poll(() => testId(dapp, "sign-in-result"), { timeout: 20_000 }).toContain(`Signed in as ${firstAddress}`);
 });
 
-test("signs an Amino transaction the page can verify", async () => {
+test("signs an Amino transaction whose memo holds & < >, over the bytes the chain rebuilds", async () => {
   const signDoc = {
     chain_id: CHAIN,
     account_number: "0",
@@ -249,7 +264,7 @@ test("signs an Amino transaction the page can verify", async () => {
         value: { from_address: firstAddress, to_address: firstAddress, amount: [{ denom: "uosmo", amount: "1" }] },
       },
     ],
-    memo: "zunia e2e",
+    memo: ESCAPED_MEMO,
   };
   const signing = dapp.evaluate(
     (chainId: string, signer: string, doc: unknown) =>
@@ -263,35 +278,32 @@ test("signs an Amino transaction the page can verify", async () => {
     signDoc,
   );
   await approveInWallet(/MsgSend|Send/, /^(Approve|Sign)$/);
-  const result = (await signing) as {
-    signed: unknown;
-    signature: { signature: string; pub_key: { value: string } };
-  };
-
-  const digest = sha256(serializeAminoSignDoc(result.signed));
-  const valid = secp256k1.verify(
-    base64ToBytes(result.signature.signature),
-    digest,
-    base64ToBytes(result.signature.pub_key.value),
-    { prehash: false },
-  );
-  expect(valid).toBe(true);
+  const result = (await signing) as { signed: unknown; signature: StdSignature };
+  expect(result.signed).toEqual(signDoc);
+  expect(aminoSignatureVerifies(result.signed, result.signature, firstKey.pubkey)).toBe(true);
 });
 
-test("switching accounts in the wallet reaches the page live", async () => {
+test("adding an account with its own phrase and switching to it reaches the page live", async () => {
   const before = await logCount("accountsChanged");
   const wallet = await openExtension("popup.html");
   await click(wallet, "button", /^Switch account$/);
   await click(wallet, "button", /^Add account$/);
-  // Adding an account does not switch to it. Reopen the sheet once it has
-  // closed, as a user would, and pick the new account.
-  await wallet.waitForFunction(() => !document.querySelector('[role="dialog"]'), { timeout: 10_000 });
-  await click(wallet, "button", /^Switch account$/);
-  await click(wallet, "button", /Account 2/);
-
-  await expect.poll(() => testId(dapp, "address"), { timeout: 20_000 }).not.toBe(firstAddress);
-  await expect.poll(() => logCount("accountsChanged"), { timeout: 20_000 }).toBeGreaterThan(before);
+  await click(wallet, "button", /^Restore with phrase$/);
+  await fill(wallet, /^word1 word2/, ADDED_PHRASE);
+  await click(wallet, "button", /^Continue$/);
+  await fill(wallet, /^Account name/, "Own phrase");
+  await click(wallet, "button", /^Continue$/);
+  await click(wallet, "button", /^Add account · \d+$/);
   await wallet.close();
+
+  // Adding an account does not switch to it: pick it, as a user would.
+  const home = await openExtension("popup.html");
+  await click(home, "button", /^Switch account$/);
+  await click(home, "button", /Own phrase/);
+
+  await expect.poll(() => testId(dapp, "address"), { timeout: 20_000 }).toBe(addedKey.address);
+  await expect.poll(() => logCount("accountsChanged"), { timeout: 20_000 }).toBeGreaterThan(before);
+  await home.close();
 });
 
 test("revoking the site in the wallet disconnects the page live", async () => {

@@ -1,0 +1,57 @@
+{
+  "dashboard": "zunia-dashboard a8cab18 (git archive a8cab18 src; the deployed dashboard), kernel 0.1.0 (wasm 15a61202), zunia-extension 1453e7a serializer",
+  "recorded": "2026-10-07T18:52:06.535Z",
+  "wallets": {
+    "keplr": {
+      "send, memo 'a & b <c>'": "amino VALID",
+      "send, plain memo": "amino VALID",
+      "send to a 32-byte address": "amino VALID",
+      "delegate": "amino VALID",
+      "undelegate": "amino VALID",
+      "redelegate": "amino VALID",
+      "claim": "amino VALID",
+      "vote v1beta1 veto": "amino VALID",
+      "vote v1 yes": "amino VALID",
+      "IBC transfer (timestamp only)": "amino VALID",
+      "IBC transfer, ibc-hooks memo": "direct VALID",
+      "XCS swap from Osmosis (32-byte)": "direct VALID",
+      "swap recovery, memo 'a & b'": "direct VALID",
+      "NFT send_nft, '&' in token id": "direct VALID",
+      "Osmosis pool swap": "direct VALID"
+    },
+    "zunia-0.1.4": {
+      "send, memo 'a & b <c>'": "direct VALID",
+      "send, plain memo": "direct VALID",
+      "send to a 32-byte address": "stopped before broadcast: Unsupported in Zunia",
+      "delegate": "direct VALID",
+      "undelegate": "direct VALID",
+      "redelegate": "direct VALID",
+      "claim": "direct VALID",
+      "vote v1beta1 veto": "direct VALID",
+      "vote v1 yes": "direct VALID",
+      "IBC transfer (timestamp only)": "direct VALID",
+      "IBC transfer, ibc-hooks memo": "direct VALID",
+      "XCS swap from Osmosis (32-byte)": "amino VALID",
+      "swap recovery, memo 'a & b'": "stopped before broadcast: Unsupported in Zunia",
+      "NFT send_nft, '&' in token id": "stopped before broadcast: Unsupported in Zunia",
+      "Osmosis pool swap": "direct VALID"
+    },
+    "zunia-mobile": {
+      "send, memo 'a & b <c>'": "amino VALID",
+      "send, plain memo": "amino VALID",
+      "send to a 32-byte address": "amino VALID",
+      "delegate": "amino VALID",
+      "undelegate": "amino VALID",
+      "redelegate": "amino VALID",
+      "claim": "amino VALID",
+      "vote v1beta1 veto": "amino VALID",
+      "vote v1 yes": "amino VALID",
+      "IBC transfer (timestamp only)": "amino VALID",
+      "IBC transfer, ibc-hooks memo": "direct VALID",
+      "XCS swap from Osmosis (32-byte)": "direct VALID",
+      "swap recovery, memo 'a & b'": "direct VALID",
+      "NFT send_nft, '&' in token id": "direct VALID",
+      "Osmosis pool swap": "direct VALID"
+    }
+  }
+}
