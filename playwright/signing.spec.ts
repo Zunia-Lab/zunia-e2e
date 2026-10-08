@@ -639,7 +639,7 @@ const FLOWS: Flow[] = [
     },
     // The recovery is a contract call on Osmosis, from the recovery address.
     expected: { keplr: "direct", zunia: "direct", "zunia-0.1.4": "amino" },
-    memo: "Recover swap output · by Zunia-wallet",
+    memo: "Recover swap - by Zunia-dashboard",
     contractCall: { recover: {} },
     prompt: new RegExp(`^Execute "recover" on ${XCS}$`),
   },
